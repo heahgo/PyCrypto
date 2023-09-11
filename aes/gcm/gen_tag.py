@@ -1,21 +1,13 @@
-def mult(x : int, y : int) -> int: # Multiplication GF(2^128)
-    z = 0
-    r = 0b11100001 << 120 # 1 + x + x^2 + x^7
-    for i in range(128): 
-        if x & (1<<127):
-            z ^= y
-        x <<= 1
-        if y & 1:
-            y = (y>>1)^r
-        else:
-            y >>= 1
-    return z
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from util import mult_128
 
 def GHASH(x : bytes, H : bytes) -> int:
     y = 0
     H = int.from_bytes(H, 'big')
     for i in range(0, len(x), 16):
-        y = mult(y ^ int.from_bytes(x[i:i+16], 'big'), H)
+        y = mult_128(y ^ int.from_bytes(x[i:i+16], 'big'), H)
     return y
 
 def gen_tag(x : bytes, H : bytes, ej : bytes, ad=b'') -> int:
