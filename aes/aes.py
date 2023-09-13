@@ -43,10 +43,15 @@ class aes:
 
     def __init__(self, key):
         self.key = key
-        if len(key) == 128 // 8 or len(key) == 192 // 8 or len(key) // 8 == 256:
-            self.key_size = len(key)
+        if len(key) == 16:
+            self.round = 10
+        elif len(key) == 24:
+            self.round = 12
+        elif len(key) == 32:
+            self.round = 14
         else:
             raise ValueError
+        self.key_size = len(key)
         self.ex_key = self.keyExpantion()
         
     def keyExpantion(self):
@@ -58,9 +63,19 @@ class aes:
         rotWord = lambda w: w[1:4] + w[0:1]
         subWord = lambda w: list2byte([self.sbox[b] for b in w])
         xorWord = lambda w1, w2: list2byte([w1[i]^w2[i] for i in range(4)])
+        
+        nk = self.key_size // 4
+        ex_key = self.key
+        for i in range(nk, 4*(self.round+1)):
+            if i % nk == 0: 
+                ex_key += xorWord(xorWord(subWord(rotWord(ex_key[(i-1)*4:i*4])), ex_key[(i-nk)*4:(i-nk+1)*4]), rcon[i//nk-1])
+            else:
+                ex_key += xorWord(ex_key[(i-1)*4:i*4], ex_key[(i-nk)*4:(i-nk+1)*4])
+            if nk > 6 and i % nk == 4:
+                ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
 
-        pass
-
+        return ex_key
+    
     def addRoundKey(self, state):
         key_state = byte2state(self.key)
         return [i^j for i, j in zip(state, key_state)]
@@ -131,6 +146,8 @@ class aes:
     
 if __name__ ==  '__main__':
     from Crypto.Random import get_random_bytes
-    key = get_random_bytes(16)
+    key = b'\x54\x68\x61\x74\x73\x20\x6d\x79\x20\x4b\x75\x6e\x67\x20\x46\x75'
     crypto = aes(key)
+    for i in range(0, 16*crypto.round+1, 16):
+        print(crypto.ex_key[i:i+16].hex())
 
