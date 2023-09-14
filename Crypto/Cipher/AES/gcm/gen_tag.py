@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from util import mult_128
+from aes.Util import mult_128
 
 def GHASH(x : bytes, H : bytes) -> int:
     y = 0

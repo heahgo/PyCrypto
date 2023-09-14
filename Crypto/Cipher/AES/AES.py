@@ -1,6 +1,6 @@
-from util import *
+from Util import *
 
-class aes:
+class AES:
     block_size  = 16
        
     sbox = (
@@ -44,11 +44,11 @@ class aes:
     def __init__(self, key):
         self.key = key
         if len(key) == 16:
-            self.round = 10
+            self.r = 10
         elif len(key) == 24:
-            self.round = 12
-        elif len(key) == 32:
-            self.round = 14
+            self.r = 12
+        # elif len(key) == 32:
+        #     self.r = 14
         else:
             raise ValueError
         self.key_size = len(key)
@@ -66,18 +66,18 @@ class aes:
         
         nk = self.key_size // 4
         ex_key = self.key
-        for i in range(nk, 4*(self.round+1)):
+        for i in range(nk, 4*(self.r+1)):
             if i % nk == 0: 
                 ex_key += xorWord(xorWord(subWord(rotWord(ex_key[(i-1)*4:i*4])), ex_key[(i-nk)*4:(i-nk+1)*4]), rcon[i//nk-1])
             else:
                 ex_key += xorWord(ex_key[(i-1)*4:i*4], ex_key[(i-nk)*4:(i-nk+1)*4])
-            if nk > 6 and i % nk == 4:
-                ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
+            # if nk > 6 and i % nk == 4:
+            #     ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
 
         return ex_key
     
-    def addRoundKey(self, state):
-        key_state = byte2state(self.key)
+    def addRoundKey(self, state, key):
+        key_state = byte2state(key)
         return [i^j for i, j in zip(state, key_state)]
 
     def mixColumns(self, state):
@@ -91,29 +91,29 @@ class aes:
                [mult_8(state[i], 9)^mult_8(state[i+4], 14) ^mult_8(state[i+8], 11)^mult_8(state[i+12], 13) for i in range(4)] + \
                [mult_8(state[i], 13)^mult_8(state[i+4], 9) ^mult_8(state[i+8], 14)^mult_8(state[i+12], 11) for i in range(4)] + \
                [mult_8(state[i], 11)^mult_8(state[i+4], 13)^mult_8(state[i+8], 9)^mult_8(state[i+12], 14) for i in range(4)]
-
     def shiftRows(self, state):
         return state[:4] + \
-               state[7:8] + state[4:7] + \
+               state[5:8] + state[4:5] + \
                state[10:12] + state[8:10] + \
                state[15:] + state[12:15]
     
     def inv_shiftRows(self ,state):
         return state[:4] + \
-               state[5:8] + state[4:5] + \
+               state[7:8] + state[4:7] + \
                state[10:12] + state[8:10] + \
                state[13:] + state[12:13]
-    
+
     def subBytes(self, state):
-        return [aes.sbox[i] for i in state]
+        return [AES.sbox[i] for i in state]
     
     def inv_subBytes(self, state):
-        return [aes.inv_sbox[i] for i in state]
+        return [AES.inv_sbox[i] for i in state]
     
-    def round(self, state):
-        return self.addRoundKey(self.mixColumns(self.shiftRows(self.subBytes(state))))
-    def inv_round(self, state):
-        return self.inv_subBytes(self.inv_shiftRows(self.inv_mixColumns(self.addRoundKey(state))))
+    def round(self, state, key):
+        return self.addRoundKey(self.mixColumns(self.shiftRows(self.subBytes(state))), key)
+    
+    def inv_round(self, state, key):
+        return self.inv_mixColumns(self.addRoundKey(self.inv_subBytes(self.inv_shiftRows(state)), key))
     
     def encrypt(self, state):
         try:
@@ -122,32 +122,64 @@ class aes:
             print(e)
             exit()
 
-        blocks = [state[i: i+16] for i in range(0, len(state), self.block_size)]
+        blocks = [state[i:i+16] for i in range(0, len(state), self.block_size)]
         result = b''
         for block in blocks:
             state = byte2state(block)
-            for i in range(20):
-                state = self.round(state)
+
+            state = self.addRoundKey(state, self.ex_key[0:16])
+            for i in range(16, (self.r)*16, 16):
+                state = self.round(state, self.ex_key[i:i+16])
+            state = self.addRoundKey(self.shiftRows(self.subBytes(state)), self.ex_key[-16:])
             result += state2byte(state)
+
         return result
             
     def decrypt(self, state):
         if len(state) % self.block_size != 0:
             return 0
         
-        blocks = [state[i: i+16] for i in range(0, len(state), self.block_size)]
+        blocks = [state[i:i+16] for i in range(0, len(state), self.block_size)]
         result = b''
         for block in blocks:
             state = byte2state(block)
-            for i in range(20):
-                state = self.inv_round(state)
+
+            state = self.addRoundKey(state, self.ex_key[-16:])
+            for i in reversed(range(16, (self.r)*16, 16)):
+                state = self.inv_round(state, self.ex_key[i:i+16])
+            state = self.addRoundKey(self.inv_subBytes(self.inv_shiftRows(state)), self.ex_key[0:16])
             result += state2byte(state)
+
         return result
-    
+
+
 if __name__ ==  '__main__':
     from Crypto.Random import get_random_bytes
-    key = b'\x54\x68\x61\x74\x73\x20\x6d\x79\x20\x4b\x75\x6e\x67\x20\x46\x75'
-    crypto = aes(key)
-    for i in range(0, 16*crypto.round+1, 16):
-        print(crypto.ex_key[i:i+16].hex())
-
+    from random import randint
+    from Crypto.Cipher import AES as aes
+    from Crypto.Util.Padding import pad, unpad
+    def test(key_len):
+        if key_len != 16 and key_len != 24 and key_len != 32:
+            print('Key length only 128, 192, 256')
+            return
+        for i in range(1000):
+            key = get_random_bytes(key_len)
+            crypto1 = AES(key)
+            crypto2 = aes.new(key, aes.MODE_ECB)
+            p = get_random_bytes(randint(1, 196))
+            c1 = crypto1.encrypt(pad(p, 16))
+            c2 = crypto2.encrypt(pad(p, 16))
+            try:
+                p1 = unpad(crypto1.decrypt(c1), 16)
+                p2 = unpad(crypto2.decrypt(c2), 16)
+            except ValueError:
+                print(f'AES-{key_len*8} Test Falied')
+                return        
+            if  c1  != c2 or p1 != p2:
+                print(f'AES-{key_len*8} Test Falied')
+                return
+        print(f'AES-{key_len*8} Test Sucsessed')
+    
+    test(16)
+    test(24)
+    # test(32)
