@@ -1,4 +1,3 @@
-
 from AES_util import *
 class AES_ECB(AES):
     
@@ -43,7 +42,7 @@ if __name__ ==  '__main__':
     from Crypto.Random import get_random_bytes
     from random import randint
     from Crypto.Cipher import AES 
-    from Crypto.Util.Padding import pad, unpad
+    from padding import pad, unpad
     def test(key_len):
         if key_len != 16 and key_len != 24 and key_len != 32:
             print('Key length only 128, 192, 256')
