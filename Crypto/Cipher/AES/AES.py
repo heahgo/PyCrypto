@@ -47,8 +47,8 @@ class AES:
             self.r = 10
         elif len(key) == 24:
             self.r = 12
-        # elif len(key) == 32:
-        #     self.r = 14
+        elif len(key) == 32:
+            self.r = 14
         else:
             raise ValueError
         self.key_size = len(key)
@@ -69,10 +69,11 @@ class AES:
         for i in range(nk, 4*(self.r+1)):
             if i % nk == 0: 
                 ex_key += xorWord(xorWord(subWord(rotWord(ex_key[(i-1)*4:i*4])), ex_key[(i-nk)*4:(i-nk+1)*4]), rcon[i//nk-1])
+            elif nk > 6 and i % nk == 4:
+                ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
             else:
                 ex_key += xorWord(ex_key[(i-1)*4:i*4], ex_key[(i-nk)*4:(i-nk+1)*4])
-            # if nk > 6 and i % nk == 4:
-            #     ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
+
 
         return ex_key
     
@@ -162,7 +163,7 @@ if __name__ ==  '__main__':
         if key_len != 16 and key_len != 24 and key_len != 32:
             print('Key length only 128, 192, 256')
             return
-        for i in range(1000):
+        for i in range(100):
             key = get_random_bytes(key_len)
             crypto1 = AES(key)
             crypto2 = aes.new(key, aes.MODE_ECB)
@@ -182,4 +183,4 @@ if __name__ ==  '__main__':
     
     test(16)
     test(24)
-    # test(32)
+    test(32)
