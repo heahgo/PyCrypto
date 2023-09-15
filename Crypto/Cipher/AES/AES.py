@@ -1,5 +1,16 @@
 from Util import *
 
+def mult_8(x, y): # mult_8 mutiplication GF(2^8)
+    result = 0
+    while y:
+        if y & 0x01:
+            result ^= x
+        y >>= 1
+        x <<= 1
+        if x & 0x100:
+            x ^= 0x1b
+    return result & 0xff
+
 class AES:
     block_size  = 16
        
@@ -73,7 +84,6 @@ class AES:
                 ex_key += xorWord(subWord(ex_key[(i-1)*4:i*4]), ex_key[(i-nk)*4:(i-nk+1)*4])
             else:
                 ex_key += xorWord(ex_key[(i-1)*4:i*4], ex_key[(i-nk)*4:(i-nk+1)*4])
-
 
         return ex_key
     

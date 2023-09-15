@@ -31,27 +31,3 @@ def byte2state(byte):
 
 def state2byte(state):
     return list2byte(state2list(state))
-
-def mult_8(x, y): # mult_8 mutiplication GF(2^8)
-    result = 0
-    while y:
-        if y & 0x01:
-            result ^= x
-        y >>= 1
-        x <<= 1
-        if x & 0x100:
-            x ^= 0x1b
-    return result & 0xff
-
-def mult_128(x : int, y : int) -> int: # mult_128 multiplication GF(2^128)
-    z = 0
-    r = 0b11100001 << 120 # 1 + x + x^2 + x^7
-    for i in range(128): 
-        if x & (1<<127):
-            z ^= y
-        x <<= 1
-        if y & 1:
-            y = (y>>1)^r
-        else:
-            y >>= 1
-    return z
