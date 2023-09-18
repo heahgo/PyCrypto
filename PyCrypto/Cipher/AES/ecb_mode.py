@@ -63,7 +63,7 @@ if __name__ ==  '__main__':
             if  c1  != c2 or p1 != p2:
                 print(f'AES-{key_len*8} ECB mode Test Falied')
                 return
-        print(f'AES-{key_len*8} ECB mode Test Sucsessed')
+        print(f'AES-{key_len*8} ECB mode Test Succeed')
     
     test(16)
     test(24)

@@ -57,7 +57,7 @@ if __name__ == '__main__':
             if tag1 != tag2:
                 print('Test Failed')
                 return
-        print('Test Sucsessed')
+        print('Test Succeed')
 
     test(100)
     

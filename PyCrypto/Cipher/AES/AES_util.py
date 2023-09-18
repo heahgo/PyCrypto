@@ -123,6 +123,7 @@ class AES(Crypto):
                [mult_8(state[i], 9)^mult_8(state[i+4], 14) ^mult_8(state[i+8], 11)^mult_8(state[i+12], 13) for i in range(4)] + \
                [mult_8(state[i], 13)^mult_8(state[i+4], 9) ^mult_8(state[i+8], 14)^mult_8(state[i+12], 11) for i in range(4)] + \
                [mult_8(state[i], 11)^mult_8(state[i+4], 13)^mult_8(state[i+8], 9)^mult_8(state[i+12], 14) for i in range(4)]
+    
     def shiftRows(self, state):
         return state[:4] + \
                state[5:8] + state[4:5] + \
