@@ -1,2 +1,2 @@
-# Py-Crypto
+# PyCrypto
 Crypto Implementation in Python
