@@ -1,39 +1,32 @@
 from AES_util import *
-class AES_ECB(AES):
+
+class AES_ECB(AES_Util):
     
-    def encrypt(self, state):
+    def encrypt(self, plaintext):
         try:
-            unpad(state, self.block_size)
+            unpad(plaintext, self.block_size)
         except ValueError as e:
             print(e)
             exit()
 
-        blocks = [state[i:i+16] for i in range(0, len(state), self.block_size)]
+        blocks = [plaintext[i:i+self.block_size] for i in range(0, len(plaintext), self.block_size)]
+
         result = b''
         for block in blocks:
             state = byte2state(block)
-
-            state = self.addRoundKey(state, self.ex_key[0:16])
-            for i in range(16, (self.r)*16, 16):
-                state = self.round(state, self.ex_key[i:i+16])
-            state = self.addRoundKey(self.shiftRows(self.subBytes(state)), self.ex_key[-16:])
+            state = self.enc_state(state)
             result += state2byte(state)
-
         return result
             
-    def decrypt(self, state):
-        if len(state) % self.block_size != 0:
+    def decrypt(self, ciphertext):
+        if len(ciphertext) % self.block_size != 0:
             return 0
         
-        blocks = [state[i:i+16] for i in range(0, len(state), self.block_size)]
+        blocks = [ciphertext[i:i+self.block_size] for i in range(0, len(ciphertext), self.block_size)]
         result = b''
         for block in blocks:
             state = byte2state(block)
-
-            state = self.addRoundKey(state, self.ex_key[-16:])
-            for i in reversed(range(16, (self.r)*16, 16)):
-                state = self.inv_round(state, self.ex_key[i:i+16])
-            state = self.addRoundKey(self.inv_subBytes(self.inv_shiftRows(state)), self.ex_key[0:16])
+            state = self.dec_state(state)
             result += state2byte(state)
 
         return result

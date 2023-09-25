@@ -32,7 +32,7 @@ def mult_8(x, y): # mult_8 mutiplication GF(2^8)
 
 from crypto import Crypto
 
-class AES(Crypto):
+class AES_Util(Crypto):
     block_size  = 16
        
     sbox = (
@@ -137,10 +137,10 @@ class AES(Crypto):
                state[13:] + state[12:13]
 
     def subBytes(self, state):
-        return [AES.sbox[i] for i in state]
+        return [AES_Util.sbox[i] for i in state]
     
     def inv_subBytes(self, state):
-        return [AES.inv_sbox[i] for i in state]
+        return [AES_Util.inv_sbox[i] for i in state]
     
     def round(self, state, key):
         return self.addRoundKey(self.mixColumns(self.shiftRows(self.subBytes(state))), key)
@@ -148,3 +148,16 @@ class AES(Crypto):
     def inv_round(self, state, key):
         return self.inv_mixColumns(self.addRoundKey(self.inv_subBytes(self.inv_shiftRows(state)), key))
     
+    def enc_state(self, state):
+        state = self.addRoundKey(state, self.ex_key[0:16])
+        for i in range(16, (self.r)*16, 16):
+            state = self.round(state, self.ex_key[i:i+16])
+        state = self.addRoundKey(self.shiftRows(self.subBytes(state)), self.ex_key[-16:])
+        return state
+
+    def dec_state(self, state):
+        state = self.addRoundKey(state, self.ex_key[-16:])
+        for i in reversed(range(16, (self.r)*16, 16)):
+            state = self.inv_round(state, self.ex_key[i:i+16])
+        state = self.addRoundKey(self.inv_subBytes(self.inv_shiftRows(state)), self.ex_key[0:16])
+        return state
