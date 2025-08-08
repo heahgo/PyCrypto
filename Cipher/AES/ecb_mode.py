@@ -3,12 +3,6 @@ from AES_util import *
 class AES_ECB(AES_Util):
     
     def encrypt(self, plaintext):
-        try:
-            unpad(plaintext, self.block_size)
-        except ValueError as e:
-            print(e)
-            exit()
-
         blocks = [plaintext[i:i+self.block_size] for i in range(0, len(plaintext), self.block_size)]
 
         result = b''
