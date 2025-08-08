@@ -186,10 +186,10 @@ class AES_Util(Crypto):
                 state[0x0C], state[0x09], state[0x06], state[0x03]]
 
     def subBytes(self, state):
-        return [AES_Util.sbox[i] for i in state]
+        return [self.sbox[i] for i in state]
     
     def inv_subBytes(self, state):
-        return [AES_Util.inv_sbox[i] for i in state]
+        return [self.inv_sbox[i] for i in state]
     
     def round(self, state, key):
         return self.addRoundKey(self.mixColumns(self.shiftRows(self.subBytes(state))), key)
