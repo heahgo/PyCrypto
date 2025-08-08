@@ -13,9 +13,8 @@ class AES_ECB(AES_Util):
 
         result = b''
         for block in blocks:
-            state = byte2state(block)
-            state = self.enc_state(state)
-            result += state2byte(state)
+            block = self.enc_state(block)
+            result += list2byte(block)
         return result
             
     def decrypt(self, ciphertext):
@@ -25,9 +24,8 @@ class AES_ECB(AES_Util):
         blocks = [ciphertext[i:i+self.block_size] for i in range(0, len(ciphertext), self.block_size)]
         result = b''
         for block in blocks:
-            state = byte2state(block)
-            state = self.dec_state(state)
-            result += state2byte(state)
+            block = self.dec_state(block)
+            result += list2byte(block)
 
         return result
     
@@ -47,6 +45,7 @@ if __name__ ==  '__main__':
             p = get_random_bytes(randint(1, 196))
             c1 = crypto1.encrypt(pad(p, 16))
             c2 = crypto2.encrypt(pad(p, 16))
+            
             try:
                 p1 = unpad(crypto1.decrypt(c1), 16)
                 p2 = unpad(crypto2.decrypt(c2), 16)
