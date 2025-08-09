@@ -4,8 +4,6 @@ def list2byte(arr):
         result += bytes({arr[i]})
     return result
 
-def byte2list(byte):
-        return [byte[4*i + j] for i in range(4) for j in range(4)]
 
 #gmul, inv_gmul is GF(2^8) multiplication tables 
 # 0x01 : gmul[0], 0x02 : gmul[1], 0x03 : gmul[2]
@@ -92,16 +90,16 @@ class AES_Util(Crypto):
         
     def keyExpantion(self):
         rcon = (
-                b'\x01\x00\x00\x00', b'\x02\x00\x00\x00', b'\x04\x00\x00\x00', b'\x08\x00\x00\x00', b'\x10\x00\x00\x00', 
-                b'\x20\x00\x00\x00', b'\x40\x00\x00\x00', b'\x80\x00\x00\x00', b'\x1b\x00\x00\x00', b'\x36\x00\x00\x00'
+                [0x01, 0x00, 0x00, 0x00], [0x02, 0x00, 0x00, 0x00], [0x04, 0x00, 0x00, 0x00], [0x08, 0x00, 0x00, 0x00], [0x10, 0x00, 0x00, 0x00], 
+                [0x20, 0x00, 0x00, 0x00], [0x40, 0x00, 0x00, 0x00], [0x80, 0x00, 0x00, 0x00], [0x1B, 0x00, 0x00, 0x00], [0x36, 0x00, 0x00, 0x00]
                 )
         
         rotWord = lambda w: w[1:4] + w[0:1]
-        subWord = lambda w: list2byte([self.sbox[b] for b in w])
-        xorWord = lambda w1, w2: list2byte([w1[i]^w2[i] for i in range(4)])
+        subWord = lambda w: [self.sbox[b] for b in w]
+        xorWord = lambda w1, w2: [w1[i]^w2[i] for i in range(4)]
         
         nk = self.key_size // 4
-        ex_key = self.key
+        ex_key = [self.key[i] for i in range(self.key_size)]
         for i in range(nk, 4*(self.r+1)):
             if i % nk == 0: 
                 ex_key += xorWord(xorWord(subWord(rotWord(ex_key[(i-1)*4:i*4])), ex_key[(i-nk)*4:(i-nk+1)*4]), rcon[i//nk-1])
